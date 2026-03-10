@@ -158,8 +158,8 @@ export default function TradeHistory() {
                   <th>Qty</th>
                   <th>P&L</th>
                   <th>P&L %</th>
+                  <th>Grade</th>
                   <th>Session</th>
-                  <th>TF</th>
                   <th>Date</th>
                   <th></th>
                 </tr>
@@ -186,13 +186,15 @@ export default function TradeHistory() {
                     <td className={`font-mono ${trade.pnl_percent > 0 ? 'text-green' : trade.pnl_percent < 0 ? 'text-red' : ''}`}>
                       {trade.pnl_percent != null ? `${trade.pnl_percent >= 0 ? '+' : ''}${trade.pnl_percent.toFixed(2)}%` : '—'}
                     </td>
+                    <td style={{ fontWeight: 700, fontSize: '0.9rem', color: trade.grade === 'A' ? 'var(--green)' : trade.grade === 'B' ? 'orange' : trade.grade === 'C' ? 'var(--red)' : 'var(--text-muted)' }}>
+                      {trade.grade || '—'}
+                    </td>
                     <td>
                       {trade.session
                         ? <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', background: 'var(--bg-input)', padding: '2px 7px', borderRadius: 4 }}>{trade.session}</span>
                         : <span className="text-muted">—</span>
                       }
                     </td>
-                    <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{trade.timeframe || '—'}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>{formatDate(trade.date ?? trade.entry_date)}</td>
                     <td onClick={e => e.stopPropagation()}>
                       <button

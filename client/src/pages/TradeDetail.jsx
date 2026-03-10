@@ -4,6 +4,12 @@ import { getTradeById, updateTrade, deleteTrade, calculatePnl } from '../utils/s
 
 const SESSIONS = ['London', 'New York', 'Asian', 'London/NY Overlap'];
 const TIMEFRAMES = ['1m', '2m', '5m', '15m', '30m', '1H'];
+const EMOTIONS = ['Disciplined', 'Confident', 'Hesitant', 'FOMO', 'Revenge', 'Anxious', 'Neutral'];
+const GRADES = ['A', 'B', 'C'];
+const MISTAKE_OPTIONS = [
+  'Chased entry', 'Sized too big', 'Moved stop loss', 'Took profit too early',
+  'Ignored trade plan', 'Overtraded', 'Revenge traded', 'Missed entry'
+];
 
 function formatPnl(val) {
   if (val === null || val === undefined) return '—';
@@ -46,6 +52,10 @@ export default function TradeDetail() {
       session: t.session ?? '',
       timeframe: t.timeframe ?? '',
       setup: t.setup ?? '',
+      risk_amount: t.risk_amount ?? '',
+      emotion: t.emotion ?? '',
+      grade: t.grade ?? '',
+      mistakes: t.mistakes ?? [],
       notes: t.notes ?? ''
     });
   }, [id]);
@@ -72,6 +82,10 @@ export default function TradeDetail() {
         session: form.session,
         timeframe: form.timeframe,
         setup: form.setup,
+        risk_amount: form.risk_amount ? parseFloat(form.risk_amount) : null,
+        emotion: form.emotion,
+        grade: form.grade,
+        mistakes: form.mistakes,
         notes: form.notes,
         pnl,
         pnl_percent
@@ -262,6 +276,51 @@ export default function TradeDetail() {
                 <input className="form-input" value={form.setup} onChange={e => set('setup', e.target.value)} placeholder="e.g. BOS + OB retest" />
               </div>
               <div className="form-group">
+                <label className="form-label">Risk Amount ($)</label>
+                <input type="number" className="form-input" value={form.risk_amount} onChange={e => set('risk_amount', e.target.value)} step="any" placeholder="0.00" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Emotion</label>
+                <select className="form-select" value={form.emotion} onChange={e => set('emotion', e.target.value)}>
+                  <option value="">None</option>
+                  {EMOTIONS.map(em => <option key={em} value={em}>{em}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Trade Grade</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {GRADES.map(g => (
+                    <button key={g} type="button" onClick={() => set('grade', form.grade === g ? '' : g)} className="btn flex-1"
+                      style={{
+                        justifyContent: 'center', fontWeight: 700,
+                        background: form.grade === g ? (g === 'A' ? 'var(--green-dim)' : g === 'B' ? 'rgba(255,165,0,0.15)' : 'var(--red-dim)') : 'var(--bg-input)',
+                        border: `1px solid ${form.grade === g ? (g === 'A' ? 'var(--green)' : g === 'B' ? 'orange' : 'var(--red)') : 'var(--border)'}`,
+                        color: form.grade === g ? (g === 'A' ? 'var(--green)' : g === 'B' ? 'orange' : 'var(--red)') : 'var(--text-muted)'
+                      }}
+                    >{g}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Mistakes</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {MISTAKE_OPTIONS.map(m => {
+                    const active = (form.mistakes || []).includes(m);
+                    return (
+                      <button key={m} type="button"
+                        onClick={() => set('mistakes', active ? form.mistakes.filter(x => x !== m) : [...(form.mistakes || []), m])}
+                        style={{
+                          padding: '3px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer',
+                          border: `1px solid ${active ? 'var(--red)' : 'var(--border)'}`,
+                          background: active ? 'var(--red-dim)' : 'var(--bg-input)',
+                          color: active ? 'var(--red)' : 'var(--text-muted)'
+                        }}
+                      >{m}</button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="form-group">
                 <label className="form-label">Notes</label>
                 <textarea className="form-textarea" value={form.notes} onChange={e => set('notes', e.target.value)} rows={3} />
               </div>
@@ -285,6 +344,34 @@ export default function TradeDetail() {
                   </dd>
                 </div>
               ))}
+              {trade.risk_amount != null && (
+                <div>
+                  <dt style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Risk Amount</dt>
+                  <dd style={{ fontFamily: 'monospace', color: 'var(--text-primary)', fontSize: '0.9rem' }}>${Number(trade.risk_amount).toFixed(2)}</dd>
+                </div>
+              )}
+              {trade.grade && (
+                <div>
+                  <dt style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Grade</dt>
+                  <dd style={{ fontWeight: 700, fontSize: '1rem', color: trade.grade === 'A' ? 'var(--green)' : trade.grade === 'B' ? 'orange' : 'var(--red)' }}>{trade.grade}</dd>
+                </div>
+              )}
+              {trade.emotion && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <dt style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Emotion</dt>
+                  <dd style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{trade.emotion}</dd>
+                </div>
+              )}
+              {trade.mistakes && trade.mistakes.length > 0 && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <dt style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Mistakes</dt>
+                  <dd style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {trade.mistakes.map(m => (
+                      <span key={m} style={{ padding: '3px 10px', borderRadius: 20, fontSize: '0.75rem', background: 'var(--red-dim)', color: 'var(--red)', border: '1px solid var(--red)' }}>{m}</span>
+                    ))}
+                  </dd>
+                </div>
+              )}
               {trade.setup && (
                 <div style={{ gridColumn: '1 / -1' }}>
                   <dt style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Setup</dt>
