@@ -7,6 +7,7 @@ import LogTrade from './pages/LogTrade.jsx';
 import TradeHistory from './pages/TradeHistory.jsx';
 import TradeDetail from './pages/TradeDetail.jsx';
 import Analytics from './pages/Analytics.jsx';
+import Calendar from './pages/Calendar.jsx';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -35,6 +36,7 @@ function AppRoutes() {
         <Route path="/trades" element={<ProtectedRoute><TradeHistory /></ProtectedRoute>} />
         <Route path="/trades/:id" element={<ProtectedRoute><TradeDetail /></ProtectedRoute>} />
         <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+        <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
