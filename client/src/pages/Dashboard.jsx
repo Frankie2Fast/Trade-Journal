@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getTrades } from '../utils/storage.js';
+import { getTrades, saveTrades, exportTrades, importTrades } from '../utils/storage.js';
 
 function formatPnl(val) {
   if (val === null || val === undefined) return '—';
@@ -53,10 +53,33 @@ function StatCard({ label, value, valueColor, sub, glow, delay }) {
 export default function Dashboard() {
   const navigate = useNavigate();
   const [trades, setTrades] = useState([]);
+  const [importMsg, setImportMsg] = useState('');
+  const importRef = useRef();
 
   useEffect(() => {
     setTrades(getTrades());
   }, []);
+
+  const handleExport = () => exportTrades();
+
+  const handleImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const added = importTrades(ev.target.result, 'merge');
+        setTrades(getTrades());
+        setImportMsg(`${added} trade${added !== 1 ? 's' : ''} imported successfully`);
+        setTimeout(() => setImportMsg(''), 4000);
+      } catch {
+        setImportMsg('Invalid backup file — import failed');
+        setTimeout(() => setImportMsg(''), 4000);
+      }
+    };
+    reader.readAsText(file);
+    if (importRef.current) importRef.current.value = '';
+  };
 
   const analytics = computeAnalytics(trades);
   const recentTrades = trades.slice(0, 5);
@@ -68,8 +91,36 @@ export default function Dashboard() {
           <h1 className="page-title">Dashboard</h1>
           <p className="page-subtitle">Your trading performance overview</p>
         </div>
-        <Link to="/log-trade" className="btn btn-primary">+ Log Trade</Link>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={handleExport}
+            title="Download all trades as JSON backup"
+            style={{ gap: 6 }}
+          >
+            ↓ Export
+          </button>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => importRef.current?.click()}
+            title="Restore trades from a backup file"
+            style={{ gap: 6 }}
+          >
+            ↑ Import
+          </button>
+          <input ref={importRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImport} />
+          <Link to="/log-trade" className="btn btn-primary">+ Log Trade</Link>
+        </div>
       </div>
+
+      {importMsg && (
+        <div
+          className={`animate-fade-in ${importMsg.includes('failed') ? 'error-msg' : 'success-msg'}`}
+          style={{ marginBottom: 16 }}
+        >
+          {importMsg}
+        </div>
+      )}
 
       {/* Stats grid */}
       <div className="grid-4" style={{ marginBottom: 24 }}>

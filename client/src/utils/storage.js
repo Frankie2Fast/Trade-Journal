@@ -34,11 +34,30 @@ export function getTradeById(id) {
   return getTrades().find(t => t.id === id) || null;
 }
 
-export function calculatePnl(direction, entryPrice, exitPrice, quantity) {
-  if (!exitPrice) return { pnl: null, pnl_percent: null };
-  const pnl = direction === 'LONG'
-    ? (exitPrice - entryPrice) * quantity
-    : (entryPrice - exitPrice) * quantity;
-  const pnl_percent = (pnl / (entryPrice * quantity)) * 100;
-  return { pnl, pnl_percent };
+export function exportTrades() {
+  const trades = getTrades();
+  const json = JSON.stringify({ version: 1, exported_at: new Date().toISOString(), trades }, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `trade-journal-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function importTrades(jsonString, mode = 'merge') {
+  const parsed = JSON.parse(jsonString);
+  const incoming = Array.isArray(parsed) ? parsed : (parsed.trades ?? []);
+  if (!Array.isArray(incoming)) throw new Error('Invalid backup file.');
+  if (mode === 'replace') {
+    saveTrades(incoming);
+    return incoming.length;
+  }
+  // merge: keep existing, add any that don't already exist by id
+  const existing = getTrades();
+  const existingIds = new Set(existing.map(t => t.id));
+  const newOnes = incoming.filter(t => !existingIds.has(t.id));
+  saveTrades([...newOnes, ...existing]);
+  return newOnes.length;
 }
