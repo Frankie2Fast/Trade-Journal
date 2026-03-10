@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { addTrade, calculatePnl } from '../utils/storage.js';
+import { addTrade } from '../utils/storage.js';
 
 const SESSIONS = ['London', 'New York', 'Asian', 'London/NY Overlap'];
-const TIMEFRAMES = ['1m', '2m', '5m', '15m', '30m', '1H'];
 const EMOTIONS = ['Disciplined', 'Confident', 'Hesitant', 'FOMO', 'Revenge', 'Anxious', 'Neutral'];
 const GRADES = ['A', 'B', 'C'];
 const MISTAKE_OPTIONS = [
@@ -18,12 +17,10 @@ export default function LogTrade() {
   const [form, setForm] = useState({
     symbol: '',
     direction: 'LONG',
-    entry_price: '',
-    exit_price: '',
     quantity: '',
+    pnl: '',
     date: new Date().toISOString().slice(0, 10),
     session: '',
-    timeframe: '',
     setup: '',
     risk_amount: '',
     emotion: '',
@@ -34,50 +31,27 @@ export default function LogTrade() {
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
-  // Preview P&L
-  let previewPnl = null;
-  if (form.entry_price && form.exit_price && form.quantity) {
-    const ep = parseFloat(form.entry_price);
-    const xp = parseFloat(form.exit_price);
-    const qty = parseFloat(form.quantity);
-    if (!isNaN(ep) && !isNaN(xp) && !isNaN(qty)) {
-      previewPnl = form.direction === 'LONG' ? (xp - ep) * qty : (ep - xp) * qty;
-    }
-  }
-
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
 
-    const entryPrice = parseFloat(form.entry_price);
-    const exitPrice = form.exit_price ? parseFloat(form.exit_price) : null;
-    const quantity = parseFloat(form.quantity);
-
-    if (isNaN(entryPrice) || isNaN(quantity)) {
-      setError('Invalid entry price or quantity.');
-      return;
-    }
-
-    const { pnl, pnl_percent } = calculatePnl(form.direction, entryPrice, exitPrice, quantity);
+    const quantity = form.quantity ? parseFloat(form.quantity) : null;
+    const pnl = form.pnl !== '' ? parseFloat(form.pnl) : null;
 
     const trade = {
       id: Date.now().toString(),
       symbol: form.symbol.toUpperCase(),
       direction: form.direction,
-      entry_price: entryPrice,
-      exit_price: exitPrice,
       quantity,
+      pnl,
       date: form.date,
       session: form.session,
-      timeframe: form.timeframe,
       setup: form.setup,
       risk_amount: form.risk_amount ? parseFloat(form.risk_amount) : null,
       emotion: form.emotion,
       grade: form.grade,
       mistakes: form.mistakes,
       notes: form.notes,
-      pnl,
-      pnl_percent,
       images: [],
       created_at: new Date().toISOString()
     };
@@ -143,48 +117,32 @@ export default function LogTrade() {
 
           <div className="grid-3" style={{ gap: 16, marginBottom: 16 }}>
             <div className="form-group">
-              <label className="form-label">Entry Price *</label>
+              <label className="form-label">P&L ($) *</label>
               <input
                 type="number"
                 className="form-input"
-                value={form.entry_price}
-                onChange={e => set('entry_price', e.target.value)}
-                placeholder="0.00"
+                value={form.pnl}
+                onChange={e => set('pnl', e.target.value)}
+                placeholder="e.g. 250 or -100"
                 step="any"
-                min="0"
                 required
+                style={{ fontFamily: 'monospace' }}
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Exit Price</label>
-              <input
-                type="number"
-                className="form-input"
-                value={form.exit_price}
-                onChange={e => set('exit_price', e.target.value)}
-                placeholder="0.00"
-                step="any"
-                min="0"
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Quantity *</label>
+              <label className="form-label">Quantity</label>
               <input
                 type="number"
                 className="form-input"
                 value={form.quantity}
                 onChange={e => set('quantity', e.target.value)}
-                placeholder="0"
+                placeholder="Shares / contracts"
                 step="any"
                 min="0"
-                required
               />
             </div>
-          </div>
 
-          <div className="grid-3" style={{ gap: 16, marginBottom: 16 }}>
             <div className="form-group">
               <label className="form-label">Date *</label>
               <input
@@ -195,7 +153,9 @@ export default function LogTrade() {
                 required
               />
             </div>
+          </div>
 
+          <div className="grid-2" style={{ gap: 16, marginBottom: 16 }}>
             <div className="form-group">
               <label className="form-label">Session</label>
               <select
@@ -209,15 +169,16 @@ export default function LogTrade() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Timeframe</label>
-              <select
-                className="form-select"
-                value={form.timeframe}
-                onChange={e => set('timeframe', e.target.value)}
-              >
-                <option value="">— Select —</option>
-                {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
+              <label className="form-label">Risk Amount ($)</label>
+              <input
+                type="number"
+                className="form-input"
+                value={form.risk_amount}
+                onChange={e => set('risk_amount', e.target.value)}
+                placeholder="0.00"
+                step="any"
+                min="0"
+              />
             </div>
           </div>
 
@@ -231,19 +192,7 @@ export default function LogTrade() {
             />
           </div>
 
-          <div className="grid-3" style={{ gap: 16, marginBottom: 16 }}>
-            <div className="form-group">
-              <label className="form-label">Risk Amount ($)</label>
-              <input
-                type="number"
-                className="form-input"
-                value={form.risk_amount}
-                onChange={e => set('risk_amount', e.target.value)}
-                placeholder="0.00"
-                step="any"
-                min="0"
-              />
-            </div>
+          <div className="grid-2" style={{ gap: 16, marginBottom: 16 }}>
             <div className="form-group">
               <label className="form-label">Emotion</label>
               <select className="form-select" value={form.emotion} onChange={e => set('emotion', e.target.value)}>
@@ -306,30 +255,6 @@ export default function LogTrade() {
             />
           </div>
         </div>
-
-        {/* P&L Preview */}
-        {previewPnl !== null && (
-          <div style={{
-            marginTop: 16,
-            padding: '14px 18px',
-            background: previewPnl >= 0 ? 'var(--green-dim)' : 'var(--red-dim)',
-            border: `1px solid ${previewPnl >= 0 ? 'var(--green)' : 'var(--red)'}`,
-            borderRadius: 8,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Estimated P&L</span>
-            <span style={{
-              fontWeight: 700,
-              fontSize: '1.125rem',
-              color: previewPnl >= 0 ? 'var(--green)' : 'var(--red)',
-              fontFamily: 'monospace'
-            }}>
-              {previewPnl >= 0 ? '+' : ''}${previewPnl.toFixed(2)}
-            </span>
-          </div>
-        )}
 
         <div style={{ marginTop: 20, display: 'flex', gap: 12 }}>
           <button

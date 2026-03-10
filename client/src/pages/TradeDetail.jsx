@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getTradeById, updateTrade, deleteTrade, calculatePnl } from '../utils/storage.js';
+import { getTradeById, updateTrade, deleteTrade } from '../utils/storage.js';
 
 const SESSIONS = ['London', 'New York', 'Asian', 'London/NY Overlap'];
-const TIMEFRAMES = ['1m', '2m', '5m', '15m', '30m', '1H'];
 const EMOTIONS = ['Disciplined', 'Confident', 'Hesitant', 'FOMO', 'Revenge', 'Anxious', 'Neutral'];
 const GRADES = ['A', 'B', 'C'];
 const MISTAKE_OPTIONS = [
@@ -45,12 +44,10 @@ export default function TradeDetail() {
     setForm({
       symbol: t.symbol,
       direction: t.direction,
-      entry_price: t.entry_price,
-      exit_price: t.exit_price ?? '',
-      quantity: t.quantity,
+      quantity: t.quantity ?? '',
+      pnl: t.pnl ?? '',
       date: t.date ?? t.entry_date ?? '',
       session: t.session ?? '',
-      timeframe: t.timeframe ?? '',
       setup: t.setup ?? '',
       risk_amount: t.risk_amount ?? '',
       emotion: t.emotion ?? '',
@@ -67,28 +64,19 @@ export default function TradeDetail() {
     setError('');
     setSuccess('');
     try {
-      const entryPrice = parseFloat(form.entry_price);
-      const exitPrice = form.exit_price ? parseFloat(form.exit_price) : null;
-      const quantity = parseFloat(form.quantity);
-      const { pnl, pnl_percent } = calculatePnl(form.direction, entryPrice, exitPrice, quantity);
-
       const updates = {
         symbol: form.symbol.toUpperCase(),
         direction: form.direction,
-        entry_price: entryPrice,
-        exit_price: exitPrice,
-        quantity,
+        quantity: form.quantity !== '' ? parseFloat(form.quantity) : null,
+        pnl: form.pnl !== '' ? parseFloat(form.pnl) : null,
         date: form.date,
         session: form.session,
-        timeframe: form.timeframe,
         setup: form.setup,
         risk_amount: form.risk_amount ? parseFloat(form.risk_amount) : null,
         emotion: form.emotion,
         grade: form.grade,
         mistakes: form.mistakes,
-        notes: form.notes,
-        pnl,
-        pnl_percent
+        notes: form.notes
       };
 
       const updated = updateTrade(id, updates);
@@ -164,7 +152,7 @@ export default function TradeDetail() {
               {trade.session && <span className="badge badge-muted">{trade.session}</span>}
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: 2 }}>
-              {formatDate(trade.date ?? trade.entry_date)}{trade.timeframe ? ` • ${trade.timeframe}` : ''}
+              {formatDate(trade.date ?? trade.entry_date)}
             </p>
           </div>
         </div>
@@ -242,16 +230,12 @@ export default function TradeDetail() {
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Entry Price</label>
-                <input type="number" className="form-input" value={form.entry_price} onChange={e => set('entry_price', e.target.value)} step="any" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Exit Price</label>
-                <input type="number" className="form-input" value={form.exit_price} onChange={e => set('exit_price', e.target.value)} step="any" placeholder="Optional" />
+                <label className="form-label">P&L ($)</label>
+                <input type="number" className="form-input" value={form.pnl} onChange={e => set('pnl', e.target.value)} step="any" placeholder="e.g. 250 or -100" style={{ fontFamily: 'monospace' }} />
               </div>
               <div className="form-group">
                 <label className="form-label">Quantity</label>
-                <input type="number" className="form-input" value={form.quantity} onChange={e => set('quantity', e.target.value)} step="any" />
+                <input type="number" className="form-input" value={form.quantity} onChange={e => set('quantity', e.target.value)} step="any" placeholder="Shares / contracts" />
               </div>
               <div className="form-group">
                 <label className="form-label">Date</label>
@@ -262,13 +246,6 @@ export default function TradeDetail() {
                 <select className="form-select" value={form.session} onChange={e => set('session', e.target.value)}>
                   <option value="">None</option>
                   {SESSIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Timeframe</label>
-                <select className="form-select" value={form.timeframe} onChange={e => set('timeframe', e.target.value)}>
-                  <option value="">None</option>
-                  {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div className="form-group">
@@ -328,12 +305,9 @@ export default function TradeDetail() {
           ) : (
             <dl style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 8px' }}>
               {[
-                { label: 'Entry Price', value: `$${Number(trade.entry_price).toLocaleString()}`, mono: true },
-                { label: 'Exit Price', value: trade.exit_price ? `$${Number(trade.exit_price).toLocaleString()}` : '—', mono: true },
-                { label: 'Quantity', value: trade.quantity },
+                { label: 'Quantity', value: trade.quantity ?? '—' },
                 { label: 'Date', value: formatDate(trade.date ?? trade.entry_date) },
                 { label: 'Session', value: trade.session || '—' },
-                { label: 'Timeframe', value: trade.timeframe || '—' },
               ].map(row => (
                 <div key={row.label}>
                   <dt style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>

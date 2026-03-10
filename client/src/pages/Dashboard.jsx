@@ -124,9 +124,6 @@ export default function Dashboard() {
                 <tr>
                   <th>Symbol</th>
                   <th>Direction</th>
-                  <th>Entry</th>
-                  <th>Exit</th>
-                  <th>Qty</th>
                   <th>P&L</th>
                   <th>Session</th>
                   <th>Date</th>
@@ -141,9 +138,6 @@ export default function Dashboard() {
                         {trade.direction}
                       </span>
                     </td>
-                    <td className="font-mono">${Number(trade.entry_price).toLocaleString()}</td>
-                    <td className="font-mono">{trade.exit_price ? `$${Number(trade.exit_price).toLocaleString()}` : '—'}</td>
-                    <td>{trade.quantity}</td>
                     <td className={`font-mono ${trade.pnl > 0 ? 'text-green' : trade.pnl < 0 ? 'text-red' : ''}`}>
                       {formatPnl(trade.pnl)}
                     </td>
