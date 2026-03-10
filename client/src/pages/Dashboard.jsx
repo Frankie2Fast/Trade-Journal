@@ -39,11 +39,12 @@ function computeAnalytics(trades) {
   };
 }
 
-function StatCard({ label, value, valueColor, sub }) {
+function StatCard({ label, value, valueColor, sub, glow }) {
   return (
     <div className="stat-card">
       <p className="stat-label">{label}</p>
-      <p className="stat-value" style={{ color: valueColor }}>{value}</p>
+      <p className={`stat-value${glow === 'green' ? ' glow-green' : glow === 'red' ? ' glow-red' : ''}`}
+        style={{ color: valueColor }}>{value}</p>
       {sub && <p className="stat-sub">{sub}</p>}
     </div>
   );
@@ -76,25 +77,28 @@ export default function Dashboard() {
           label="Total P&L"
           value={formatPnl(analytics.totalPnl)}
           valueColor={analytics.totalPnl >= 0 ? 'var(--green)' : 'var(--red)'}
-          sub={`${analytics.closedTrades} closed trades`}
+          glow={analytics.totalPnl >= 0 ? 'green' : 'red'}
+          sub={`${analytics.totalTrades} trades logged`}
         />
         <StatCard
           label="Win Rate"
           value={analytics.totalTrades > 0 ? `${analytics.winRate}%` : '—'}
-          valueColor={analytics.winRate >= 50 ? 'var(--green)' : 'var(--red)'}
+          valueColor={analytics.winRate >= 50 ? 'var(--green)' : analytics.totalTrades > 0 ? 'var(--red)' : 'var(--text-muted)'}
+          glow={analytics.winRate >= 50 ? 'green' : undefined}
           sub={`${analytics.winCount}W / ${analytics.lossCount}L`}
         />
         <StatCard
           label="Today's P&L"
           value={formatPnl(analytics.todayPnl)}
           valueColor={analytics.todayPnl >= 0 ? 'var(--green)' : 'var(--red)'}
+          glow={analytics.todayPnl > 0 ? 'green' : analytics.todayPnl < 0 ? 'red' : undefined}
           sub="Current session"
         />
         <StatCard
-          label="Total Trades"
-          value={analytics.totalTrades}
-          valueColor="var(--text-primary)"
-          sub={`Avg win: ${formatPnl(analytics.avgWin)}`}
+          label="Avg Win"
+          value={analytics.avgWin ? formatPnl(analytics.avgWin) : '—'}
+          valueColor="var(--green)"
+          sub={`Avg loss: ${analytics.avgLoss ? formatPnl(analytics.avgLoss) : '—'}`}
         />
       </div>
 
