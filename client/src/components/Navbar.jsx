@@ -38,17 +38,19 @@ export default function Navbar() {
 
         {/* Logo */}
         <NavLink to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
-          <div style={{
-            width: 30, height: 30,
-            background: 'linear-gradient(135deg, #05d890 0%, #00a06a 100%)',
-            borderRadius: 8,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '0.9rem',
-            boxShadow: '0 0 14px rgba(5,216,144,0.35), inset 0 1px 0 rgba(255,255,255,0.2)',
-            flexShrink: 0
-          }}>
-            📈
-          </div>
+          <svg width="30" height="30" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0, filter: 'drop-shadow(0 0 8px rgba(5,216,144,0.4))' }}>
+            <defs>
+              <linearGradient id="logoLine" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0%" stopColor="#00c07e"/>
+                <stop offset="100%" stopColor="#05d890"/>
+              </linearGradient>
+            </defs>
+            <rect width="32" height="32" rx="7" fill="#0a0a14"/>
+            <rect width="32" height="32" rx="7" fill="none" stroke="#05d890" strokeWidth="1" opacity="0.25"/>
+            <polyline points="4,24 9,18 14,21 20,12 28,7" stroke="url(#logoLine)" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="20" cy="12" r="4" fill="#05d890" opacity="0.18"/>
+            <circle cx="20" cy="12" r="2.4" fill="#05d890"/>
+          </svg>
           <span style={{
             fontWeight: 800,
             fontSize: '1rem',
