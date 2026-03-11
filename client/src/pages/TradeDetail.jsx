@@ -31,6 +31,7 @@ export default function TradeDetail() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [lightbox, setLightbox] = useState(null); // { src, index }
 
   const [form, setForm] = useState({});
 
@@ -396,26 +397,33 @@ export default function TradeDetail() {
 
           {trade.images && trade.images.length > 0 ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-              {trade.images.map(img => (
-                <div key={img.id} style={{ position: 'relative', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg-input)' }}>
-                  <a href={img.data} target="_blank" rel="noopener noreferrer">
-                    <img
-                      src={img.data}
-                      alt="Trade screenshot"
-                      style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }}
-                    />
-                  </a>
+              {trade.images.map((img, idx) => (
+                <div key={img.id} style={{ position: 'relative', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg-input)', cursor: 'pointer' }}
+                  onClick={() => setLightbox({ src: img.data, index: idx })}
+                >
+                  <img
+                    src={img.data}
+                    alt="Trade screenshot"
+                    style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block', transition: 'opacity 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
+                    onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                  />
+                  <div style={{
+                    position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    opacity: 0, transition: 'opacity 0.15s', background: 'rgba(0,0,0,0.3)',
+                    fontSize: '1.4rem', color: '#fff', pointerEvents: 'none'
+                  }}
+                    className="img-zoom-hint"
+                  >⤢</div>
                   <button
-                    onClick={() => handleDeleteImage(img.id)}
+                    onClick={e => { e.stopPropagation(); handleDeleteImage(img.id); }}
                     style={{
                       position: 'absolute', top: 4, right: 4,
                       background: 'rgba(255,71,87,0.85)', border: 'none', borderRadius: 4,
                       color: '#fff', cursor: 'pointer', padding: '2px 6px', fontSize: '0.75rem',
-                      lineHeight: 1.5
+                      lineHeight: 1.5, zIndex: 1
                     }}
-                  >
-                    ✕
-                  </button>
+                  >✕</button>
                 </div>
               ))}
             </div>
@@ -434,6 +442,87 @@ export default function TradeDetail() {
           )}
         </div>
       </div>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          onClick={() => setLightbox(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0,0,0,0.88)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 24,
+            animation: 'fadeIn 0.18s ease both'
+          }}
+        >
+          {/* Prev / Next arrows */}
+          {trade.images.length > 1 && (
+            <>
+              <button
+                onClick={e => { e.stopPropagation(); const prev = (lightbox.index - 1 + trade.images.length) % trade.images.length; setLightbox({ src: trade.images[prev].data, index: prev }); }}
+                style={{
+                  position: 'fixed', left: 20, top: '50%', transform: 'translateY(-50%)',
+                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: 10, color: '#fff', fontSize: '1.4rem', cursor: 'pointer',
+                  padding: '10px 16px', zIndex: 1001, transition: 'background 0.15s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.16)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+              >‹</button>
+              <button
+                onClick={e => { e.stopPropagation(); const next = (lightbox.index + 1) % trade.images.length; setLightbox({ src: trade.images[next].data, index: next }); }}
+                style={{
+                  position: 'fixed', right: 20, top: '50%', transform: 'translateY(-50%)',
+                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: 10, color: '#fff', fontSize: '1.4rem', cursor: 'pointer',
+                  padding: '10px 16px', zIndex: 1001, transition: 'background 0.15s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.16)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+              >›</button>
+            </>
+          )}
+
+          {/* Close button */}
+          <button
+            onClick={() => setLightbox(null)}
+            style={{
+              position: 'fixed', top: 16, right: 16, zIndex: 1001,
+              background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: 8, color: '#fff', fontSize: '1rem', cursor: 'pointer',
+              padding: '6px 12px', transition: 'background 0.15s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,61,90,0.3)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+          >✕ Close</button>
+
+          {/* Image */}
+          <img
+            src={lightbox.src}
+            alt="Trade screenshot"
+            onClick={e => e.stopPropagation()}
+            style={{
+              maxWidth: '90vw', maxHeight: '88vh',
+              borderRadius: 12, objectFit: 'contain',
+              boxShadow: '0 32px 80px rgba(0,0,0,0.8)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              animation: 'scaleIn 0.2s cubic-bezier(0.22,1,0.36,1) both'
+            }}
+          />
+
+          {/* Counter */}
+          {trade.images.length > 1 && (
+            <div style={{
+              position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+              background: 'rgba(0,0,0,0.6)', borderRadius: 20, padding: '5px 14px',
+              fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', zIndex: 1001
+            }}>
+              {lightbox.index + 1} / {trade.images.length}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

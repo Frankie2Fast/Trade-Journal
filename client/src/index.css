@@ -507,6 +507,9 @@ tbody tr {
   animation: slideInLeft 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Image thumbnail: show zoom icon overlay on hover */
+div:hover > .img-zoom-hint { opacity: 1 !important; }
+
 /* Login page responsive: hide hero on small screens */
 @media (max-width: 768px) {
   .login-hero { display: none !important; }
