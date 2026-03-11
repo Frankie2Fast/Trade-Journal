@@ -455,78 +455,77 @@ export default function TradeDetail() {
           onClick={() => setLightbox(null)}
           style={{
             position: 'fixed', inset: 0, zIndex: 1000,
-            background: 'rgba(0,0,0,0.88)',
+            background: 'rgba(0,0,0,0.92)',
             backdropFilter: 'blur(8px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: 24,
-            animation: 'fadeIn 0.18s ease both'
+            overflow: lightbox.zoomed ? 'auto' : 'hidden',
+            display: 'flex',
+            alignItems: lightbox.zoomed ? 'flex-start' : 'center',
+            justifyContent: lightbox.zoomed ? 'flex-start' : 'center',
+            padding: lightbox.zoomed ? '56px 24px 24px' : '56px 24px 24px',
+            animation: 'fadeIn 0.18s ease both',
+            cursor: lightbox.zoomed ? 'zoom-out' : 'default'
           }}
         >
-          {/* Prev / Next arrows */}
-          {trade.images.length > 1 && (
-            <>
-              <button
-                onClick={e => { e.stopPropagation(); const prev = (lightbox.index - 1 + trade.images.length) % trade.images.length; setLightbox({ src: trade.images[prev].data, index: prev }); }}
-                style={{
-                  position: 'fixed', left: 20, top: '50%', transform: 'translateY(-50%)',
-                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: 10, color: '#fff', fontSize: '1.4rem', cursor: 'pointer',
-                  padding: '10px 16px', zIndex: 1001, transition: 'background 0.15s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.16)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-              >‹</button>
-              <button
-                onClick={e => { e.stopPropagation(); const next = (lightbox.index + 1) % trade.images.length; setLightbox({ src: trade.images[next].data, index: next }); }}
-                style={{
-                  position: 'fixed', right: 20, top: '50%', transform: 'translateY(-50%)',
-                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: 10, color: '#fff', fontSize: '1.4rem', cursor: 'pointer',
-                  padding: '10px 16px', zIndex: 1001, transition: 'background 0.15s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.16)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-              >›</button>
-            </>
-          )}
-
-          {/* Close button */}
-          <button
-            onClick={e => { e.stopPropagation(); setLightbox(null); }}
+          {/* Top bar: close + zoom hint */}
+          <div
+            onClick={e => e.stopPropagation()}
             style={{
-              position: 'fixed', top: 16, right: 16, zIndex: 1100,
-              background: 'rgba(20,20,30,0.95)', border: '1px solid rgba(255,255,255,0.25)',
-              borderRadius: 8, color: '#fff', fontSize: '0.95rem', fontWeight: 700,
-              cursor: 'pointer', padding: '8px 16px', transition: 'background 0.15s',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.6)'
+              position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1100,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '10px 16px',
+              background: 'rgba(10,10,20,0.85)',
+              backdropFilter: 'blur(6px)',
+              borderBottom: '1px solid rgba(255,255,255,0.08)'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,61,90,0.7)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(20,20,30,0.95)'}
-          >✕ Close</button>
+          >
+            <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)' }}>
+              {lightbox.zoomed ? 'Click image to zoom out · scroll to pan' : 'Click image to zoom in'}
+            </span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {trade.images.length > 1 && (
+                <>
+                  <button
+                    onClick={e => { e.stopPropagation(); const prev = (lightbox.index - 1 + trade.images.length) % trade.images.length; setLightbox({ src: trade.images[prev].data, index: prev, zoomed: false }); }}
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: '#fff', fontSize: '1rem', cursor: 'pointer', padding: '5px 12px' }}
+                  >‹</button>
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: '30px' }}>{lightbox.index + 1}/{trade.images.length}</span>
+                  <button
+                    onClick={e => { e.stopPropagation(); const next = (lightbox.index + 1) % trade.images.length; setLightbox({ src: trade.images[next].data, index: next, zoomed: false }); }}
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: '#fff', fontSize: '1rem', cursor: 'pointer', padding: '5px 12px' }}
+                  >›</button>
+                </>
+              )}
+              <button
+                onClick={e => { e.stopPropagation(); setLightbox(null); }}
+                style={{
+                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: 6, color: '#fff', fontSize: '0.9rem', fontWeight: 700,
+                  cursor: 'pointer', padding: '5px 14px', transition: 'background 0.15s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,61,90,0.6)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+              >✕ Close</button>
+            </div>
+          </div>
 
-          {/* Image — click anywhere on backdrop to close */}
+          {/* Image */}
           <img
             src={lightbox.src}
             alt="Trade screenshot"
+            onClick={e => { e.stopPropagation(); setLightbox(lb => ({ ...lb, zoomed: !lb.zoomed })); }}
             style={{
-              maxWidth: '85vw', maxHeight: '82vh',
-              borderRadius: 12, objectFit: 'contain',
-              boxShadow: '0 32px 80px rgba(0,0,0,0.8)',
+              display: 'block',
+              maxWidth: lightbox.zoomed ? 'none' : '88vw',
+              maxHeight: lightbox.zoomed ? 'none' : 'calc(100vh - 80px)',
+              width: lightbox.zoomed ? 'auto' : 'auto',
+              borderRadius: 10,
+              objectFit: 'contain',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.7)',
               border: '1px solid rgba(255,255,255,0.1)',
-              display: 'block', pointerEvents: 'none'
+              cursor: lightbox.zoomed ? 'zoom-out' : 'zoom-in',
+              transition: 'box-shadow 0.2s'
             }}
           />
-
-          {/* Counter */}
-          {trade.images.length > 1 && (
-            <div style={{
-              position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)',
-              background: 'rgba(0,0,0,0.6)', borderRadius: 20, padding: '5px 14px',
-              fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', zIndex: 1001
-            }}>
-              {lightbox.index + 1} / {trade.images.length}
-            </div>
-          )}
         </div>
       )}
     </div>
