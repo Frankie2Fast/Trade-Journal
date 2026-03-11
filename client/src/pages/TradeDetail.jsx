@@ -492,28 +492,28 @@ export default function TradeDetail() {
 
           {/* Close button */}
           <button
-            onClick={() => setLightbox(null)}
+            onClick={e => { e.stopPropagation(); setLightbox(null); }}
             style={{
-              position: 'fixed', top: 16, right: 16, zIndex: 1001,
-              background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: 8, color: '#fff', fontSize: '1rem', cursor: 'pointer',
-              padding: '6px 12px', transition: 'background 0.15s'
+              position: 'fixed', top: 16, right: 16, zIndex: 1100,
+              background: 'rgba(20,20,30,0.95)', border: '1px solid rgba(255,255,255,0.25)',
+              borderRadius: 8, color: '#fff', fontSize: '0.95rem', fontWeight: 700,
+              cursor: 'pointer', padding: '8px 16px', transition: 'background 0.15s',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.6)'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,61,90,0.3)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,61,90,0.7)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(20,20,30,0.95)'}
           >✕ Close</button>
 
-          {/* Image */}
+          {/* Image — click anywhere on backdrop to close */}
           <img
             src={lightbox.src}
             alt="Trade screenshot"
-            onClick={e => e.stopPropagation()}
             style={{
-              maxWidth: '90vw', maxHeight: '88vh',
+              maxWidth: '85vw', maxHeight: '82vh',
               borderRadius: 12, objectFit: 'contain',
               boxShadow: '0 32px 80px rgba(0,0,0,0.8)',
               border: '1px solid rgba(255,255,255,0.1)',
-              display: 'block'
+              display: 'block', pointerEvents: 'none'
             }}
           />
 
