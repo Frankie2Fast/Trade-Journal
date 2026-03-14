@@ -259,7 +259,7 @@ export default function Login() {
   const resetForm = () => { setUsername(''); setPassword(''); setConfirm(''); setError(''); setShowPw(false); setShowConfirm(false); };
   const switchMode = m => { resetForm(); setMode(m); };
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault(); setError('');
     if (!username.trim()) { setError('Please enter a username.'); return; }
     if (!password)        { setError('Please enter a password.'); return; }
@@ -267,13 +267,22 @@ export default function Login() {
       if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
       if (password !== confirm) { setError('Passwords do not match.'); return; }
       setLoading(true);
-      setTimeout(() => { setupAccount(username.trim(), password); navigate('/'); }, 400);
+      try {
+        await register(username.trim(), password);
+        navigate('/');
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
     } else {
       setLoading(true);
-      setTimeout(() => {
-        if (login(username.trim(), password)) { navigate('/'); }
-        else { setError('Invalid username or password.'); setLoading(false); }
-      }, 500);
+      try {
+        await login(username.trim(), password);
+        navigate('/');
+      } catch (err) {
+        setError(err.message || 'Invalid username or password.');
+        setLoading(false);
+      }
     }
   };
 
