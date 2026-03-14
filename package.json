@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "node server/index.js",
+    "server": "node --experimental-sqlite server/index.js",
     "client": "npm --prefix client run dev",
     "build": "npm --prefix client install && npm --prefix client run build",
     "start": "NODE_ENV=production node --experimental-sqlite server/index.js",
