@@ -10,8 +10,9 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar() {
-  const { logout } = useAuth();
+  const { logout, getUsername } = useAuth();
   const navigate = useNavigate();
+  const username = getUsername();
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -92,35 +93,53 @@ export default function Navbar() {
           ))}
         </div>
 
-        {/* Logout */}
-        <button
-          onClick={handleLogout}
-          style={{
-            background: 'transparent',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 7,
-            color: 'var(--text-muted)',
-            fontSize: '0.8rem',
-            fontWeight: 500,
-            padding: '6px 12px',
-            cursor: 'pointer',
-            transition: 'all 0.18s ease',
-            fontFamily: 'inherit',
-            flexShrink: 0
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.color = 'var(--red)';
-            e.currentTarget.style.borderColor = 'rgba(255,61,90,0.3)';
-            e.currentTarget.style.background = 'rgba(255,61,90,0.06)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.color = 'var(--text-muted)';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-            e.currentTarget.style.background = 'transparent';
-          }}
-        >
-          Sign out
-        </button>
+        {/* Right side: account + logout */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <NavLink
+            to="/settings"
+            style={({ isActive }) => ({
+              display: 'flex', alignItems: 'center', gap: 7,
+              padding: '5px 10px', borderRadius: 7, textDecoration: 'none',
+              border: isActive ? '1px solid rgba(5,216,144,0.25)' : '1px solid rgba(255,255,255,0.08)',
+              background: isActive ? 'rgba(5,216,144,0.08)' : 'transparent',
+              transition: 'all 0.18s ease', cursor: 'pointer'
+            })}
+          >
+            <div style={{
+              width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+              background: 'rgba(5,216,144,0.15)', border: '1px solid rgba(5,216,144,0.3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '0.65rem', fontWeight: 800, color: 'var(--green)'
+            }}>
+              {username.charAt(0).toUpperCase()}
+            </div>
+            <span style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>
+              {username}
+            </span>
+          </NavLink>
+
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'transparent', border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 7, color: 'var(--text-muted)', fontSize: '0.8rem',
+              fontWeight: 500, padding: '6px 12px', cursor: 'pointer',
+              transition: 'all 0.18s ease', fontFamily: 'inherit'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.color = 'var(--red)';
+              e.currentTarget.style.borderColor = 'rgba(255,61,90,0.3)';
+              e.currentTarget.style.background = 'rgba(255,61,90,0.06)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.color = 'var(--text-muted)';
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+              e.currentTarget.style.background = 'transparent';
+            }}
+          >
+            Sign out
+          </button>
+        </div>
       </div>
     </nav>
   );

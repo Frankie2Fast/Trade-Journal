@@ -2,24 +2,54 @@ import { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext(null);
 
-const DEFAULT_USERNAME = 'trader';
-const DEFAULT_PASSWORD = 'trader123';
-const AUTH_KEY = 'tj_logged_in';
+const AUTH_KEY  = 'tj_logged_in';
+const USER_KEY  = 'tj_username';
+const PASS_KEY  = 'tj_password';
+const SETUP_KEY = 'tj_setup_done';
 
 export function AuthProvider({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem(AUTH_KEY) === 'true';
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    () => localStorage.getItem(AUTH_KEY) === 'true'
+  );
+  const [isFirstRun, setIsFirstRun] = useState(
+    () => !localStorage.getItem(SETUP_KEY)
+  );
+
+  const _getCreds = () => ({
+    username: localStorage.getItem(USER_KEY) || '',
+    password: localStorage.getItem(PASS_KEY) || '',
   });
 
+  const getUsername = () => localStorage.getItem(USER_KEY) || '';
+
   const login = (username, password) => {
-    const storedPw = localStorage.getItem('tj_password') || DEFAULT_PASSWORD;
-    const storedUser = localStorage.getItem('tj_username') || DEFAULT_USERNAME;
-    if (username === storedUser && password === storedPw) {
+    const { username: u, password: p } = _getCreds();
+    if (username === u && password === p) {
       localStorage.setItem(AUTH_KEY, 'true');
       setIsAuthenticated(true);
       return true;
     }
     return false;
+  };
+
+  const setupAccount = (username, password) => {
+    localStorage.setItem(USER_KEY, username);
+    localStorage.setItem(PASS_KEY, password);
+    localStorage.setItem(SETUP_KEY, 'true');
+    localStorage.setItem(AUTH_KEY, 'true');
+    setIsFirstRun(false);
+    setIsAuthenticated(true);
+  };
+
+  // Returns { success: true } or { success: false, error: string }
+  const changeCredentials = (currentPassword, { newUsername, newPassword } = {}) => {
+    const { password: storedPw } = _getCreds();
+    if (currentPassword !== storedPw) {
+      return { success: false, error: 'Current password is incorrect.' };
+    }
+    if (newUsername) localStorage.setItem(USER_KEY, newUsername);
+    if (newPassword) localStorage.setItem(PASS_KEY, newPassword);
+    return { success: true };
   };
 
   const logout = () => {
@@ -28,7 +58,10 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{
+      isAuthenticated, isFirstRun,
+      login, setupAccount, changeCredentials, getUsername, logout
+    }}>
       {children}
     </AuthContext.Provider>
   );
