@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { createCheckoutSession, createPortalSession } from '../utils/storage.js';
 
 function Section({ title, sub, children }) {
   return (
@@ -67,14 +69,23 @@ function ErrorMsg({ msg }) {
       borderRadius: 8, padding: '10px 14px', fontSize: '0.85rem', color: 'var(--red)',
       display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16
     }}>
-      <span>⚠</span> {msg}
+      <span>&#9888;</span> {msg}
     </div>
   );
 }
 
 export default function Settings() {
-  const { getUsername, changeCredentials } = useAuth();
+  const { user, getUsername, changeCredentials, refreshPlan } = useAuth();
   const currentUsername = getUsername();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // On redirect back from Stripe with ?upgraded=1, refresh the plan
+  useEffect(() => {
+    if (searchParams.get('upgraded') === '1') {
+      refreshPlan();
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
 
   // Change username form
   const [newUsername, setNewUsername]       = useState('');
@@ -91,48 +102,74 @@ export default function Settings() {
   const [pwSuccess, setPwSuccess]           = useState('');
   const [pwLoading, setPwLoading]           = useState(false);
 
-  const handleChangeUsername = (e) => {
+  // Billing
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [billingError, setBillingError]     = useState('');
+
+  const handleChangeUsername = async (e) => {
     e.preventDefault();
     setUnError(''); setUnSuccess('');
     if (!newUsername.trim()) { setUnError('Please enter a new username.'); return; }
     if (newUsername.trim() === currentUsername) { setUnError('That is already your username.'); return; }
     setUnLoading(true);
-    setTimeout(() => {
-      const result = changeCredentials(unCurrentPw, { newUsername: newUsername.trim() });
+    try {
+      await changeCredentials(unCurrentPw, { newUsername: newUsername.trim() });
+      setUnSuccess(`Username changed to "${newUsername.trim()}".`);
+      setNewUsername(''); setUnCurrentPw('');
+    } catch (err) {
+      setUnError(err.message);
+    } finally {
       setUnLoading(false);
-      if (result.success) {
-        setUnSuccess(`Username changed to "${newUsername.trim()}".`);
-        setNewUsername(''); setUnCurrentPw('');
-      } else {
-        setUnError(result.error);
-      }
-    }, 300);
+    }
   };
 
-  const handleChangePassword = (e) => {
+  const handleChangePassword = async (e) => {
     e.preventDefault();
     setPwError(''); setPwSuccess('');
     if (!pwNew) { setPwError('Please enter a new password.'); return; }
     if (pwNew.length < 6) { setPwError('New password must be at least 6 characters.'); return; }
     if (pwNew !== pwConfirm) { setPwError('Passwords do not match.'); return; }
     setPwLoading(true);
-    setTimeout(() => {
-      const result = changeCredentials(pwCurrent, { newPassword: pwNew });
+    try {
+      await changeCredentials(pwCurrent, { newPassword: pwNew });
+      setPwSuccess('Password updated successfully.');
+      setPwCurrent(''); setPwNew(''); setPwConfirm('');
+    } catch (err) {
+      setPwError(err.message);
+    } finally {
       setPwLoading(false);
-      if (result.success) {
-        setPwSuccess('Password updated successfully.');
-        setPwCurrent(''); setPwNew(''); setPwConfirm('');
-      } else {
-        setPwError(result.error);
-      }
-    }, 300);
+    }
   };
+
+  const handleUpgrade = async () => {
+    setBillingError(''); setBillingLoading(true);
+    try {
+      const { url } = await createCheckoutSession();
+      window.location.href = url;
+    } catch (err) {
+      setBillingError(err.message);
+      setBillingLoading(false);
+    }
+  };
+
+  const handleManageBilling = async () => {
+    setBillingError(''); setBillingLoading(true);
+    try {
+      const { url } = await createPortalSession();
+      window.location.href = url;
+    } catch (err) {
+      setBillingError(err.message);
+      setBillingLoading(false);
+    }
+  };
+
+  const isPro = user?.plan === 'pro';
 
   return (
     <div className="page-container">
       <div className="page-header">
         <h1 className="page-title">Settings</h1>
-        <p className="page-subtitle">Manage your account credentials</p>
+        <p className="page-subtitle">Manage your account and subscription</p>
       </div>
 
       {/* Current account info */}
@@ -151,9 +188,52 @@ export default function Settings() {
         </div>
         <div>
           <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{currentUsername}</p>
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Signed in · Trade Journal</p>
+          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+            {isPro ? 'Pro Plan' : 'Free Plan'} &middot; Trade Journal
+          </p>
         </div>
+        {isPro && (
+          <div style={{ marginLeft: 'auto' }}>
+            <span style={{
+              background: 'linear-gradient(135deg, rgba(5,216,144,0.15), rgba(5,216,144,0.05))',
+              border: '1px solid rgba(5,216,144,0.3)', borderRadius: 20,
+              padding: '4px 12px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--green)'
+            }}>PRO</span>
+          </div>
+        )}
       </div>
+
+      {/* Subscription */}
+      <Section
+        title="Subscription"
+        sub="Manage your Edgeflow plan."
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <div>
+            <p style={{ fontWeight: 600, marginBottom: 4, color: 'var(--text-primary)' }}>
+              {isPro ? 'Pro Plan' : 'Free Plan'}
+            </p>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
+              {isPro
+                ? 'Unlimited trades, full analytics, and priority support.'
+                : 'Limited to 50 trades. Upgrade for unlimited access and full analytics.'}
+            </p>
+          </div>
+          {isPro ? (
+            <button className="btn" onClick={handleManageBilling} disabled={billingLoading} style={{
+              background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-primary)',
+              padding: '8px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 500, flexShrink: 0
+            }}>
+              {billingLoading ? 'Loading...' : 'Manage Billing'}
+            </button>
+          ) : (
+            <button className="btn btn-primary" onClick={handleUpgrade} disabled={billingLoading} style={{ flexShrink: 0 }}>
+              {billingLoading ? 'Loading...' : 'Upgrade to Pro'}
+            </button>
+          )}
+        </div>
+        {billingError && <div style={{ marginTop: 12 }}><ErrorMsg msg={billingError} /></div>}
+      </Section>
 
       {/* Change Username */}
       <Section
@@ -182,7 +262,7 @@ export default function Settings() {
           </div>
           <div style={{ marginTop: 16 }}>
             <button type="submit" className="btn btn-primary" disabled={unLoading}>
-              {unLoading ? 'Updating…' : 'Update Username'}
+              {unLoading ? 'Updating...' : 'Update Username'}
             </button>
           </div>
         </form>
@@ -224,7 +304,7 @@ export default function Settings() {
           </div>
           <div style={{ marginTop: 16 }}>
             <button type="submit" className="btn btn-primary" disabled={pwLoading}>
-              {pwLoading ? 'Updating…' : 'Update Password'}
+              {pwLoading ? 'Updating...' : 'Update Password'}
             </button>
           </div>
         </form>
