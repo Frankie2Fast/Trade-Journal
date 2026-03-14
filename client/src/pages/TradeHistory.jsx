@@ -26,7 +26,7 @@ export default function TradeHistory() {
   });
 
   useEffect(() => {
-    setAllTrades(getTrades());
+    getTrades().then(setAllTrades).catch(console.error);
   }, []);
 
   const filtered = allTrades
