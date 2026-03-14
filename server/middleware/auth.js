@@ -18,6 +18,15 @@ export function requireAuth(req, res, next) {
   }
 }
 
+export function requirePlan(tier) {
+  return (req, res, next) => {
+    if (req.user?.plan !== tier) {
+      return res.status(403).json({ error: 'This feature requires a Pro plan', upgrade: true });
+    }
+    next();
+  };
+}
+
 export function signToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 }
