@@ -19,7 +19,7 @@ export default function Calendar() {
   const [trades, setTrades] = useState([]);
   const [selected, setSelected] = useState(null); // 'YYYY-MM-DD'
 
-  useEffect(() => { setTrades(getTrades()); }, []);
+  useEffect(() => { getTrades().then(setTrades).catch(console.error); }, []);
 
   // Build day-keyed map for this month
   const dayMap = {};
