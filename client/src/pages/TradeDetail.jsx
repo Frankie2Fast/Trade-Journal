@@ -64,26 +64,26 @@ export default function TradeDetail() {
   const [form, setForm] = useState({});
 
   useEffect(() => {
-    const t = getTradeById(id);
-    if (!t) {
-      setError('Trade not found.');
-      return;
-    }
-    setTrade(t);
-    setForm({
-      symbol: t.symbol,
-      direction: t.direction,
-      quantity: t.quantity ?? '',
-      pnl: t.pnl ?? '',
-      date: t.date ?? t.entry_date ?? '',
-      session: t.session ?? '',
-      setup: t.setup ?? '',
-      risk_amount: t.risk_amount ?? '',
-      emotion: t.emotion ?? '',
-      grade: t.grade ?? '',
-      mistakes: t.mistakes ?? [],
-      notes: t.notes ?? ''
-    });
+    getTradeById(id)
+      .then(t => {
+        if (!t) { setError('Trade not found.'); return; }
+        setTrade(t);
+        setForm({
+          symbol: t.symbol,
+          direction: t.direction,
+          quantity: t.quantity ?? '',
+          pnl: t.pnl ?? '',
+          date: t.date ?? t.entry_date ?? '',
+          session: t.session ?? '',
+          setup: t.setup ?? '',
+          risk_amount: t.risk_amount ?? '',
+          emotion: t.emotion ?? '',
+          grade: t.grade ?? '',
+          mistakes: t.mistakes ?? [],
+          notes: t.notes ?? ''
+        });
+      })
+      .catch(() => setError('Trade not found.'));
   }, [id]);
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
