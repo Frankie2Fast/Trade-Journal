@@ -242,10 +242,10 @@ function FormField({ label, value, onChange, type = 'text', placeholder, autoFoc
 
 /* ── Main component ─────────────────────────────────── */
 export default function Login() {
-  const { login, setupAccount, isFirstRun } = useAuth();
+  const { login, register } = useAuth();
   const navigate = useNavigate();
   const [mounted, setMounted]           = useState(false);
-  const [mode, setMode]                 = useState(isFirstRun ? 'setup' : 'login');
+  const [mode, setMode]                 = useState('login');
   const [username, setUsername]         = useState('');
   const [password, setPassword]         = useState('');
   const [confirm, setConfirm]           = useState('');
