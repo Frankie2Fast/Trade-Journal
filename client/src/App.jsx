@@ -47,7 +47,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter basename="/Trade-Journal">
+    <BrowserRouter>
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>
