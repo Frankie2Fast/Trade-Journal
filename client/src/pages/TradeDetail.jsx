@@ -137,13 +137,11 @@ export default function TradeDetail() {
         return;
       }
       const reader = new FileReader();
-      reader.onload = (ev) => {
-        const base64 = ev.target.result;
+      reader.onload = async (ev) => {
+        const base64  = ev.target.result;
         const imageId = Date.now().toString() + Math.random().toString(36).slice(2);
-        const currentTrade = getTradeById(id);
-        if (!currentTrade) return;
-        const images = [...(currentTrade.images || []), { id: imageId, data: base64, name: file.name }];
-        const updated = updateTrade(id, { images });
+        const images  = [...(trade.images || []), { id: imageId, data: base64, name: file.name }];
+        const updated = await updateTrade(id, { images });
         setTrade(updated);
       };
       reader.readAsDataURL(file);
@@ -152,12 +150,10 @@ export default function TradeDetail() {
     if (fileRef.current) fileRef.current.value = '';
   };
 
-  const handleDeleteImage = (imageId) => {
+  const handleDeleteImage = async (imageId) => {
     if (!confirm('Delete this image?')) return;
-    const currentTrade = getTradeById(id);
-    if (!currentTrade) return;
-    const images = (currentTrade.images || []).filter(img => img.id !== imageId);
-    const updated = updateTrade(id, { images });
+    const images  = (trade.images || []).filter(img => img.id !== imageId);
+    const updated = await updateTrade(id, { images });
     setTrade(updated);
   };
 
