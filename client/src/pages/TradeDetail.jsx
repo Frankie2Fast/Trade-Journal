@@ -88,7 +88,7 @@ export default function TradeDetail() {
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
     setError('');
     setSuccess('');
@@ -108,7 +108,7 @@ export default function TradeDetail() {
         notes: form.notes
       };
 
-      const updated = updateTrade(id, updates);
+      const updated = await updateTrade(id, updates);
       setTrade(updated);
       setEditing(false);
       setSuccess('Trade updated successfully');
