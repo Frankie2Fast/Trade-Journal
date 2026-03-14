@@ -174,7 +174,7 @@ export default function Analytics() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    setData(computeAnalytics(getTrades()));
+    getTrades().then(trades => setData(computeAnalytics(trades))).catch(console.error);
   }, []);
 
   if (!data) return <div className="page-container"><span className="spinner" /></div>;
